@@ -1,0 +1,32 @@
+name: Daily Attendance Sync
+
+on:
+  schedule:
+    # Cron format: (min hour dom month dow). 12:30 UTC is 18:00 (6 PM) IST.
+    - cron: '30 12 * * *'
+  workflow_dispatch: # Allows you to trigger it manually via the 'Actions' tab
+
+jobs:
+  sync_job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Scraper Agent
+        # Pass secrets as environment variables to the script
+        env:
+          ROLL_NO: ${{ secrets.ROLL_NO }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: node index.js
