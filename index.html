@@ -107,15 +107,9 @@
             loadingArea.classList.remove('hidden');
 
             try {
-                const res = await fetch("http://localhost:3000/attendance", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ rollNo })
-                });
-
-                const data = await res.json();
-                if (data.error) throw new Error(data.error);
-
+                // Call Electron backend instead of localhost API
+                const data = await window.electronAPI.syncAttendance(rollNo);
+                
                 renderData(data);
             } catch (err) {
                 alert("Sync Failed: " + err.message);
