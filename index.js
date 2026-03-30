@@ -1,20 +1,24 @@
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-extra"); // Use puppeteer-extra
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const nodemailer = require("nodemailer");
-require('dotenv').config(); // Loads variables from .env when running locally
+require('dotenv').config();
+
+puppeteer.use(StealthPlugin()); // Use the stealth plugin
+
 async function runSync() {
-    // 1. Get credentials from environment (GitHub Secrets)
-    const rollNo = process.env.ROLL_NO;
-    const emailUser = process.env.EMAIL_USER;
-    const emailPass = process.env.EMAIL_PASS;
-    const recipient = process.env.RECIPIENT_EMAIL;
+    const isGitHubAction = process.env.GITHUB_ACTIONS === 'true';
 
     const launchOptions = {
         headless: "new",
-        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"]
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-blink-features=AutomationControlled",
+        ]
     };
 
-    // If running locally (not in GitHub Actions), use local Chrome to avoid ERR_BLOCKED_BY_CLIENT
-    if (process.env.GITHUB_ACTIONS !== 'true') {
+    if (!isGitHubAction) {
         launchOptions.executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
     }
 
@@ -22,10 +26,16 @@ async function runSync() {
 
     try {
         const page = await browser.newPage();
-        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        
+        // Randomize User Agent to look like a real Windows PC
+        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
 
-        // 1. Login
-        await page.goto("http://103.171.190.44/TKRCET/", { waitUntil: "networkidle2", timeout: 60000 });
+        // Bypass 'Blocked by Client' by using a more lenient 'waitUntil'
+        console.log("Navigating to TKR Portal...");
+        await page.goto("http://103.171.190.44/TKRCET/", { 
+            waitUntil: "domcontentloaded", // Don't wait for all network requests
+            timeout: 60000 
+        });
         await page.type("#username", rollNo, { delay: 20 });
         await page.type("#password", rollNo, { delay: 20 });
         await Promise.all([
