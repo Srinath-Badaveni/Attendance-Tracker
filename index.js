@@ -8,17 +8,25 @@ async function runSync() {
     const emailPass = process.env.EMAIL_PASS;
     const recipient = process.env.RECIPIENT_EMAIL;
 
-    const launchOptions = {
-        headless: "new",
-        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"]
-    };
+    // const launchOptions = {
+    //     headless: "new",
+    //     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"]
+    // };
 
     // If running locally (not in GitHub Actions), use local Chrome to avoid ERR_BLOCKED_BY_CLIENT
     if (process.env.GITHUB_ACTIONS !== 'true') {
         launchOptions.executablePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
     }
 
-    const browser = await puppeteer.launch(launchOptions);
+    const browser = await puppeteer.launch({
+    headless: "new",
+    args: [
+        "--no-sandbox", 
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage", // Fixes most "Exit Code 1" crashes on Linux
+        "--disable-gpu"
+    ]
+});
 
     try {
         const page = await browser.newPage();

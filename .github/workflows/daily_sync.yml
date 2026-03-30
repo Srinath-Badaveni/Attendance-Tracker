@@ -2,9 +2,10 @@ name: Daily Attendance Sync
 
 on:
   schedule:
-    # Cron format: (min hour dom month dow). 12:30 UTC is 18:00 (6 PM) IST.
-    - cron: '30 12 * * *'
-  workflow_dispatch: # Allows you to trigger it manually via the 'Actions' tab
+    # Runs every day at 18:00 (6 PM) IST. 
+    # Change to '*/5 * * * *' ONLY if you want to run every 5 minutes.
+    - cron: '30 12 * * *' 
+  workflow_dispatch: # Allows you to manually click "Run workflow" in the Actions tab
 
 jobs:
   sync_job:
@@ -17,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24' # Upgraded to 24 to fix deprecation warning
 
       - name: Install Dependencies
         run: npm install
@@ -25,6 +26,7 @@ jobs:
       - name: Run Scraper Agent
         # Pass secrets as environment variables to the script
         env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           ROLL_NO: ${{ secrets.ROLL_NO }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
